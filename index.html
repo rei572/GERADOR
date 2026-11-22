@@ -345,12 +345,12 @@ details input{font-size:1.15rem;min-height:50px}
     <dt>Gerador precisa (carga × fator)</dt><dd id="eNeed">—</dd>
     <dt>Cada gerador de 940 kVA</dt><dd id="eOne">—</dd>
     <hr>
-    <dt>Cabos na BT do trafo (padrão)</dt><dd id="eCabP">—</dd>
-    <dt>Cabos pela carga</dt><dd id="eCabC">—</dd>
-    <dt>Máximo do trafo (8 entradas)</dt><dd id="eCabM">—</dd>
+    <dt>Cabos por fase no trafo</dt><dd id="eCabP">—</dd>
+    <dt>Corrente no gerador</dt><dd id="eCabC">—</dd>
+    <dt>Nesta montagem</dt><dd id="eCabM">—</dd>
   </dl>
   <p class="flag" id="eCabFlag" hidden></p>
-  <p class="note">Geradores de 940 kVA da placa (prime = 940 × fator prime) em paralelo na BT de um trafo elevador de 1.500 ou 2.000 kVA. O app escolhe o menor número de geradores que dá a carga × fator, e o menor trafo que aguenta a carga. Fator 1,25 é só o limite de 80%; use 1,5 se tiver elevador e bomba, ou mais se for energizar trafo grande. Usa a carga medida na seção 5 e o tipo da seção 1. Com carga mono na alta, o gerador sente mais que os kVA da carga: 1 bucha pesa 1,73× e 2 buchas pesam 2×, porque a corrente se concentra em duas fases do gerador (ou numa só, em dobro). O app já faz essa conta. Cabos na BT: 120 mm² a 322 A, capacidade cheia, 380 V, sem neutro (delta). Padrão de 4 por fase (12 cabos); o trafo tem 8 entradas por fase.</p>
+  <p class="note">Geradores de 940 kVA da placa (prime = 940 × fator prime) em paralelo na BT de um trafo elevador de 1.500 ou 2.000 kVA. O app escolhe o menor número de geradores que dá a carga × fator, e o menor trafo que aguenta a carga. Fator 1,25 é só o limite de 80%; use 1,5 se tiver elevador e bomba, ou mais se for energizar trafo grande. Usa a carga medida na seção 5 e o tipo da seção 1. Com carga mono na alta, o gerador sente mais que os kVA da carga: 1 bucha pesa 1,73× e 2 buchas pesam 2×, porque a corrente se concentra em duas fases do gerador (ou numa só, em dobro). O app já faz essa conta. Cabos na BT: 120 mm² a 322 A, capacidade cheia, 380 V, sem neutro (delta). Cada gerador chega no trafo com 4 por fase (1.288 A, a nominal de um gerador de 940). Com 2 geradores, o paralelo ocupa as outras 4 entradas. Com 3, o fixo tira 1 e cada gerador fica com 3 por fase (966 A cada).</p>
 </section>
 
 <h2 class="sec">7. Tabela de potências</h2>
@@ -1086,7 +1086,8 @@ function calc(){
   }
 
   // eletrocentro sugerido
-  let eTxt="";
+  let eTxt="", eBest=null;
+  const CPG=n=>n===3?3:4, IcabG=380, CAPc=322, IeG=Sge=>Sge*1000/(r3*IcabG);
   const Vt=+$("vat").value, Ste=r3*Vt*cA/1000, Sge=st.tipo==="tri"?Ste:st.tipo==="fn"?Vt*cA/1000:2*Vt*cA/1000;
   {const ePk=Math.max(1,num("ePkF")||1.25), eFr=Math.min(1,Math.max(.5,num("eFr")||.9)), G1=940*eFr;
    const need=Sge*ePk, TRS=[1500,2000];
@@ -1094,37 +1095,36 @@ function calc(){
    $("eNeed").textContent=im>0?fmt(need)+" kVA prime":"—";
    $("eOne").textContent="prime "+fmt(G1)+" kVA";
    let rows="",best=null;
-   if(im>0)TRS.forEach(tr=>[1,2,3].forEach(n=>{const pr=n*G1, okG=pr>=need-1e-9, okT=tr>=Ste-1e-9;
-     const ok=okG&&okT; if(ok&&!best)best={n,tr,pr};
+   if(im>0)TRS.forEach(tr=>[1,2,3].forEach(n=>{const pr=n*G1, okG=pr>=need-1e-9, okT=tr>=Ste-1e-9, okC=IeG(Sge)<=n*CPG(n)*CAPc+1e-9;
+     const ok=okG&&okT&&okC; if(ok&&!best)best={n,tr,pr};
      const sel=best&&best.n===n&&best.tr===tr;
      rows+="<tr"+(sel?' class="sel"':ok?"":' class="over"')+"><td>"+fmt(tr)+" + "+n+"×940</td><td>"+fmt(pr)+" kVA</td><td>"+fmt(Sge/pr*100,0)+"%</td><td>"+fmt(Ste/tr*100,0)+"%</td></tr>";}));
    // escolhe: menos geradores primeiro, depois menor trafo
-   if(im>0){best=null;for(const n of [1,2,3])for(const tr of TRS){if(!best&&n*G1>=need-1e-9&&tr>=Ste-1e-9)best={n,tr,pr:n*G1};}}
+   if(im>0){best=null;for(const n of [1,2,3])for(const tr of TRS){if(!best&&n*G1>=need-1e-9&&tr>=Ste-1e-9&&IeG(Sge)<=n*CPG(n)*CAPc+1e-9)best={n,tr,pr:n*G1};}}
    $("eTab").innerHTML=rows.replace(/ class="sel"/g,"");
    if(best)[...$("eTab").rows].forEach(r=>{if(r.cells[0].textContent===fmt(best.tr)+" + "+best.n+"×940")r.className="sel";});
+   eBest=best;
    const eg=$("eGen");
    if(!(im>0)){$("eSel").textContent="–";$("eSub").textContent="Digite a carga medida na seção 5.";eg.classList.remove("none");}
    else if(best){$("eSel").textContent="Trafo "+fmt(best.tr)+" + "+best.n+" ger.";
      $("eSub").textContent=best.n+" × 940 kVA (prime "+fmt(best.pr)+" kVA) · geradores a "+fmt(Sge/best.pr*100,0)+"% · trafo a "+fmt(Ste/best.tr*100,0)+"%";eg.classList.remove("none");
      eTxt="\nEletrocentro: trafo "+fmt(best.tr)+" kVA + "+best.n+" × 940 kVA (prime "+fmt(best.pr)+" kVA), geradores a "+fmt(Sge/best.pr*100,0)+"%";}
    else{$("eSel").textContent="Não cabe em um";eg.classList.add("none");
-     $("eSub").textContent=Ste>2000?"A corrente na alta passa da nominal do trafo de 2.000 kVA ("+fA(2000000/(r3*Vt))+").":"Precisa de "+fmt(need)+" kVA prime e 3 geradores dão "+fmt(3*G1)+" kVA.";
+     $("eSub").textContent=Ste>2000?"A corrente na alta passa da nominal do trafo de 2.000 kVA ("+fA(2000000/(r3*Vt))+").":IeG(Sge)>3*3*CAPc?"A corrente no gerador ("+fA(IeG(Sge))+") passa do que os cabos aguentam com 3 geradores (3 × 3 por fase = "+fA(9*CAPc)+").":"Precisa de "+fmt(need)+" kVA prime e 3 geradores dão "+fmt(3*G1)+" kVA.";
      eTxt="\nEletrocentro: não cabe em um (no gerador "+fmt(Sge)+" kVA)";}
   }
 
-  // cabos na BT do eletrocentro (padrão 4 por fase, até 8 entradas)
-  {const CAP=322, VB=380, Ie=im>0?Sge*1000/(r3*VB):0, nPad=4, nMax=8;
-   const nNeed=Ie>0?Math.max(1,Math.ceil(Ie/CAP-1e-9)):0;
-   const kvaOf=n=>r3*VB*n*CAP/1000;
-   $("eCabP").textContent=nPad+" por fase · "+nPad*3+" cabos · até "+fA(nPad*CAP)+" ("+fmt(kvaOf(nPad))+" kVA)";
-   $("eCabC").textContent=Ie>0?nNeed+" por fase · "+fA(Ie)+" em "+VB+" V":"—";
-   $("eCabM").textContent=nMax+" por fase · "+nMax*3+" cabos · até "+fA(nMax*CAP)+" ("+fmt(kvaOf(nMax))+" kVA)";
+  // cabos na BT do eletrocentro: 1 ger = 4 por fase; 2 ger = 4 + 4; 3 ger = 3 + 3 + 3
+  {const Ie=im>0?IeG(Sge):0, n=eBest?eBest.n:0, c=n?CPG(n):0;
+   $("eCabP").textContent="1 ger.: 4 · 2 ger.: 4 + 4 · 3 ger.: 3 + 3 + 3";
+   $("eCabC").textContent=Ie>0?fA(Ie)+" no total"+(n>1?" · "+fA(Ie/n)+" por gerador":""):"—";
+   $("eCabM").textContent=n?n+" × "+c+" por fase = "+n*c+" por fase ("+n*c*3+" cabos) · "+fA(c*CAPc)+" por gerador":"—";
    const f=$("eCabFlag");let t="";
-   if(Ie>0&&nNeed>nMax){t="🔴 A carga pede "+nNeed+" cabos por fase ("+fA(Ie)+"), mais que as 8 entradas do trafo. Não passa num eletrocentro só.";f.className="flag bad";}
-   else if(Ie>0&&nNeed>nPad){t="🟡 Acima do padrão: a carga pede "+nNeed+" cabos por fase ("+nNeed*3+" no total). Leve mais "+(nNeed-nPad)*3+" cabos; o trafo tem entradas até 8 por fase.";f.className="flag";}
-   else if(Ie>0){t="🟢 O padrão de 4 por fase (12 cabos) aguenta a carga.";f.className="flag ok";}
+   if(Ie>0&&n){const per=Ie/n, cap=c*CAPc;
+     if(per>cap+1e-9){t="🔴 Cada gerador puxa "+fA(per)+" e os "+c+" cabos dele aguentam "+fA(cap)+".";f.className="flag bad";}
+     else{t="🟢 "+(n===1?"Os 4 cabos fixos do eletrocentro":n===2?"4 por fase no fixo e 4 no paralelo":"3 por fase em cada gerador (tira 1 do fixo)")+" aguentam: "+fA(per)+" por gerador de "+fA(cap)+".";f.className="flag ok";}}
    f.hidden=!t;f.textContent=t;
-   if(eTxt&&Ie>0)eTxt+="\nCabos BT do trafo: "+(nNeed>nMax?"carga pede "+nNeed+" por fase, passa das 8 entradas":nNeed>nPad?nNeed+" por fase ("+nNeed*3+" cabos), acima do padrão de 4":"padrão 4 por fase (12 cabos) aguenta");
+   if(eTxt&&n)eTxt+="\nCabos BT do trafo: "+(n===1?"4 por fase (fixo)":n===2?"4 por fase no fixo + 4 no paralelo (8 por fase)":"3 + 3 + 3 por fase (tira 1 do fixo)");
   }
 
   // corrente máxima na baixa
