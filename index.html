@@ -345,12 +345,12 @@ details input{font-size:1.15rem;min-height:50px}
     <dt>Gerador precisa (carga × fator)</dt><dd id="eNeed">—</dd>
     <dt>Cada gerador de 940 kVA</dt><dd id="eOne">—</dd>
     <hr>
-    <dt>Cabos por fase no trafo</dt><dd id="eCabP">—</dd>
+    <dt>Cabos por fase pela carga</dt><dd id="eCabP">—</dd>
     <dt>Corrente no gerador</dt><dd id="eCabC">—</dd>
-    <dt>Nesta montagem</dt><dd id="eCabM">—</dd>
+    <dt>Pela nominal do gerador</dt><dd id="eCabM">—</dd>
   </dl>
   <p class="flag" id="eCabFlag" hidden></p>
-  <p class="note">Geradores de 940 kVA da placa (prime = 940 × fator prime) em paralelo na BT de um trafo elevador de 1.500 ou 2.000 kVA. O app escolhe o menor número de geradores que dá a carga × fator, e o menor trafo que aguenta a carga. Fator 1,25 é só o limite de 80%; use 1,5 se tiver elevador e bomba, ou mais se for energizar trafo grande. Usa a carga medida na seção 5 e o tipo da seção 1. Com carga mono na alta, o gerador sente mais que os kVA da carga: 1 bucha pesa 1,73× e 2 buchas pesam 2×, porque a corrente se concentra em duas fases do gerador (ou numa só, em dobro). O app já faz essa conta. Cabos na BT: 120 mm² a 322 A, capacidade cheia, 380 V, sem neutro (delta). Cada gerador chega no trafo com 4 por fase (1.288 A, a nominal de um gerador de 940). Com 2 geradores, o paralelo ocupa as outras 4 entradas. Com 3, o fixo tira 1 e cada gerador fica com 3 por fase (966 A cada).</p>
+  <p class="note">Geradores de 940 kVA da placa (prime = 940 × fator prime) em paralelo na BT de um trafo elevador de 1.500 ou 2.000 kVA. O app escolhe o menor número de geradores que dá a carga × fator, e o menor trafo que aguenta a carga. Fator 1,25 é só o limite de 80%; use 1,5 se tiver elevador e bomba, ou mais se for energizar trafo grande. Usa a carga medida na seção 5 e o tipo da seção 1. Com carga mono na alta, o gerador sente mais que os kVA da carga: 1 bucha pesa 1,73× e 2 buchas pesam 2×, porque a corrente se concentra em duas fases do gerador (ou numa só, em dobro). O app já faz essa conta. Cabos na BT: 120 mm² a 322 A, capacidade cheia, 380 V, sem neutro (delta). Os geradores em paralelo dividem a carga por igual (o controlador faz isso), não importa quantos cabos cada um tem. Por isso a conta é por gerador. Cada gerador chega no trafo com 4 por fase (1.288 A, a nominal de um gerador de 940). Com 2 geradores, o paralelo ocupa as outras 4 entradas. Com 3, o fixo tira 1 e cada gerador fica com 3 por fase (966 A cada).</p>
 </section>
 
 <h2 class="sec">7. Tabela de potências</h2>
@@ -1114,17 +1114,19 @@ function calc(){
      eTxt="\nEletrocentro: não cabe em um (no gerador "+fmt(Sge)+" kVA)";}
   }
 
-  // cabos na BT do eletrocentro: 1 ger = 4 por fase; 2 ger = 4 + 4; 3 ger = 3 + 3 + 3
+  // cabos na BT do eletrocentro: real pela carga, por gerador (a carga se divide igual entre eles)
   {const Ie=im>0?IeG(Sge):0, n=eBest?eBest.n:0, c=n?CPG(n):0;
-   $("eCabP").textContent="1 ger.: 4 · 2 ger.: 4 + 4 · 3 ger.: 3 + 3 + 3";
-   $("eCabC").textContent=Ie>0?fA(Ie)+" no total"+(n>1?" · "+fA(Ie/n)+" por gerador":""):"—";
-   $("eCabM").textContent=n?n+" × "+c+" por fase = "+n*c+" por fase ("+n*c*3+" cabos) · "+fA(c*CAPc)+" por gerador":"—";
+   const per=n?Ie/n:0, real=per>0?Math.max(1,Math.ceil(per/CAPc-1e-9)):0;
+   $("eCabP").textContent=n?(n>1?n+" × "+real+" = "+n*real+" por fase":real+" por fase")+" · "+n*real*3+" cabos":"—";
+   $("eCabC").textContent=Ie>0?fA(Ie)+" no total"+(n>1?" · "+fA(per)+" em cada gerador":""):"—";
+   $("eCabM").textContent=n?c+" por fase em cada gerador ("+fA(c*CAPc)+")":"—";
    const f=$("eCabFlag");let t="";
-   if(Ie>0&&n){const per=Ie/n, cap=c*CAPc;
-     if(per>cap+1e-9){t="🔴 Cada gerador puxa "+fA(per)+" e os "+c+" cabos dele aguentam "+fA(cap)+".";f.className="flag bad";}
-     else{t="🟢 "+(n===1?"Os 4 cabos fixos do eletrocentro":n===2?"4 por fase no fixo e 4 no paralelo":"3 por fase em cada gerador (tira 1 do fixo)")+" aguentam: "+fA(per)+" por gerador de "+fA(cap)+".";f.className="flag ok";}}
+   if(Ie>0&&n){
+     if(real>c){t="🔴 Cada gerador puxa "+fA(per)+" e pede "+real+" cabos por fase, mas só cabem "+c+" ("+fA(c*CAPc)+").";f.className="flag bad";}
+     else if(real<c){t="🟡 Pela carga bastam "+real+" por fase em cada gerador ("+fA(real*CAPc)+"). Com menos que "+c+", o cabo aguenta menos que o gerador: se a carga subir, o cabo esquenta antes da proteção do gerador atuar.";f.className="flag";}
+     else{t="🟢 "+real+" por fase em cada gerador ("+fA(real*CAPc)+") para "+fA(per)+".";f.className="flag ok";}}
    f.hidden=!t;f.textContent=t;
-   if(eTxt&&n)eTxt+="\nCabos BT do trafo: "+(n===1?"4 por fase (fixo)":n===2?"4 por fase no fixo + 4 no paralelo (8 por fase)":"3 + 3 + 3 por fase (tira 1 do fixo)");
+   if(eTxt&&n)eTxt+="\nCabos BT do trafo: "+real+" por fase em cada gerador ("+n*real+" por fase no trafo), "+fA(per)+" por gerador";
   }
 
   // corrente máxima na baixa
