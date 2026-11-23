@@ -447,7 +447,30 @@ details input{font-size:1.15rem;min-height:50px}
     <hr>
     <dt id="gCabLL">Cabos 120 mm² pela carga</dt><dd id="gCabL">—</dd>
     <dt id="gTrL" hidden>Trafo equivalente</dt><dd id="gTr" hidden>—</dd>
+    <dt>Gerador ÷ carga</dt><dd id="gMult">—</dd>
   </dl>
+</section>
+
+<h2 class="sec">Regra rápida · gerador tri em carga bifásica</h2>
+<section class="panel">
+  <p class="note">O limite do gerador é a <b>corrente por fase</b>, não o kVA da placa. Na carga bifásica uma fase fica parada e as outras duas continuam limitadas à mesma corrente nominal. Por isso ele entrega menos kVA.</p>
+  <div class="lcd">
+    <table>
+      <thead><tr><th>Ligação da carga</th><th>Usa do gerador</th><th>Gerador ≥</th></tr></thead>
+      <tbody>
+        <tr><td colspan="3"><b>Só pela corrente (aquecimento do alternador)</b></td></tr>
+        <tr><td>220 V entre fases (F‑F)</td><td>58%</td><td>1,73× a carga</td></tr>
+        <tr><td>127 V dividida em 2 fases (F‑N, precisa de neutro)</td><td>67%</td><td>1,5× a carga</td></tr>
+        <tr><td>Tudo numa fase só (mono F‑N)</td><td>33%</td><td>3× a carga</td></tr>
+        <tr><td colspan="3"><b>Com proteção de desequilíbrio a 50% (limite 45% da corrente)</b></td></tr>
+        <tr><td>Bifásico (F‑F ou F‑N em 2 fases)</td><td>26%</td><td>3,85× a carga</td></tr>
+        <tr><td>Mono F‑N (uma fase)</td><td>15%</td><td>6,7× a carga</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note"><b>Mandar o dobro</b> cobre só o aquecimento (1,73×). Mas a 3ª fase em 0 A faz o desequilíbrio = corrente da fase ÷ nominal. Com o ajuste típico de 50%, o gerador desarma com metade da nominal, bem antes de esquentar. É essa proteção que manda, e o cálculo acima já usa ela.</p>
+  <p class="note"><b>Exemplos em 220 V:</b> 30 kVA bifásico = 136 A → 52 kVA pela corrente, ≈ 115 kVA com a proteção. 100 kVA bifásico = 455 A → 173 kVA pela corrente, ≈ 385 kVA com a proteção.</p>
+  <p class="note"><b>Para usar um gerador menor:</b> passe cargas 127 V para a 3ª fase (equilibra) ou suba o ajuste de desequilíbrio, só dentro do limite do alternador (veja "Proteção de desequilíbrio"). Confira também a tensão: gerador em 380/220 V dá 380 V entre fases. Se o cliente pedir 100 kVA, veja se é a carga real ou só o tamanho do trafo. Medir no alicate evita mandar gerador grande demais.</p>
 </section>
 
 <h2 class="sec">Gerador disponível</h2>
@@ -1004,6 +1027,7 @@ function calc(){
   $("gPk").textContent=Ig>0?"≈ "+fmt(gStart)+" kVA · "+fA(Ipk):"—";
   $("gByReg").textContent=Ig>0?fmt(Math.ceil(Sreq-1e-9))+" kVA":"—";
   $("gByPk").textContent=Ig>0?fmt(Math.ceil(gStart-1e-9))+" kVA":"—";
+  $("gMult").textContent=Ig>0&&Sload>0?fmt(Math.ceil(Math.max(Sreq,gStart)-1e-9)/Sload,2)+"× a carga"+(bi?" (bifásico, com a proteção)":""):"—";
   if(!(Ig>0)){$("gSel").textContent="–";$("gSub").textContent=med?"Digite a corrente medida.":"Digite os kVA do trafo.";["gIn","gSkva","gSsb","gOc"].forEach(i=>$(i).textContent="—");}
   else{const Ign=gk*1000/(r3*Vg);
     $("gSel").textContent=fmt(gk)+" kVA";
