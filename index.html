@@ -458,7 +458,7 @@ details input{font-size:1.15rem;min-height:50px}
     <table>
       <thead><tr><th>Ligação da carga</th><th>Usa do gerador</th><th>Gerador ≥</th></tr></thead>
       <tbody>
-        <tr><td colspan="3"><b>Só pela corrente (aquecimento do alternador)</b></td></tr>
+        <tr><td colspan="3"><b>Só pela corrente (referência: não use para escolher)</b></td></tr>
         <tr><td>220 V entre fases (F‑F)</td><td>58%</td><td>1,73× a carga</td></tr>
         <tr><td>127 V dividida em 2 fases (F‑N, precisa de neutro)</td><td>67%</td><td>1,5× a carga</td></tr>
         <tr><td>Tudo numa fase só (mono F‑N)</td><td>33%</td><td>3× a carga</td></tr>
@@ -468,9 +468,9 @@ details input{font-size:1.15rem;min-height:50px}
       </tbody>
     </table>
   </div>
-  <p class="note"><b>Mandar o dobro</b> cobre só o aquecimento (1,73×). Mas a 3ª fase em 0 A faz o desequilíbrio = corrente da fase ÷ nominal. Com o ajuste típico de 50%, o gerador desarma com metade da nominal, bem antes de esquentar. É essa proteção que manda, e o cálculo acima já usa ela.</p>
+  <p class="note"><b>Mandar o dobro não basta:</b> cobre só o aquecimento (1,73×). Mas a 3ª fase em 0 A faz o desequilíbrio = corrente da fase ÷ nominal. Com o ajuste típico de 50%, o gerador desarma com metade da nominal, bem antes de esquentar. É essa proteção que manda, e o cálculo acima já usa ela.</p>
   <p class="note"><b>Exemplos em 220 V:</b> 30 kVA bifásico = 136 A → 52 kVA pela corrente, ≈ 115 kVA com a proteção. 100 kVA bifásico = 455 A → 173 kVA pela corrente, ≈ 385 kVA com a proteção.</p>
-  <p class="note"><b>Cliente bifásico (residencial, 2 entradas):</b> não existe 3ª fase para equilibrar. A carga fica só em duas fases do gerador, sempre. As saídas são: mandar o gerador pela regra da proteção (≈ 3,85×) ou subir o ajuste de desequilíbrio, só dentro do limite do alternador (veja "Proteção de desequilíbrio"). Aí o gerador pode ficar perto de 1,73× a carga. Confira também a tensão: gerador em 380/220 V dá 380 V entre fases. Se o cliente pedir 100 kVA, veja se é a carga real ou só o tamanho do trafo. Medir no alicate evita mandar gerador grande demais.</p>
+  <p class="note"><b>Cliente bifásico (residencial, 2 entradas):</b> não existe 3ª fase para equilibrar. A carga fica só em duas fases do gerador, sempre. Como não se altera nada no gerador (nem proteção, nem ligação), a única saída é a conta: mandar o gerador pela regra da proteção, ≈ 3,85× a carga bifásica. Confira também a tensão: gerador em 380/220 V dá 380 V entre fases. Se o cliente pedir 100 kVA, veja se é a carga real ou só o tamanho do trafo. Medir no alicate evita mandar gerador grande demais.</p>
 </section>
 
 <h2 class="sec">Gerador disponível</h2>
@@ -551,7 +551,7 @@ details input{font-size:1.15rem;min-height:50px}
     <dt>Nominal do gerador (kVA ÷ 1,73 ÷ V)</dt><dd id="pIn">—</dd>
     <dt>Desequilíbrio = (maior − menor) ÷ nominal</dt><dd id="pDes">—</dd>
     <dt>Desarma a partir de</dt><dd id="pTrip">—</dd>
-    <dt id="pAdjL">Ajuste para segurar esta carga (+20%)</dt><dd id="pAdj">—</dd>
+    <dt id="pAdjL" hidden>Ajuste para segurar esta carga (+20%)</dt><dd id="pAdj" hidden>—</dd>
     <hr>
     <dt>Máximo em bifásico (3ª fase em 0 A)</dt><dd id="pBiI">—</dd>
     <dt>Potência máxima em bifásico</dt><dd id="pBiS">—</dd>
@@ -566,9 +566,9 @@ details input{font-size:1.15rem;min-height:50px}
 <h2 class="sec">Como resolver em campo</h2>
 <section class="panel">
   <p class="note"><b>1. Confirme a causa.</b> No histórico de alarmes do controlador, veja se atuou o desequilíbrio de corrente (no InteliGen4, Current Unbalance; no DSE, Current Imbalance). Se foi subtensão ou sobrecorrente, a solução é outra.</p>
-  <p class="note"><b>2. Passe carga para a 3ª fase (só se o cliente for trifásico).</b> Se o cliente tem a 3ª fase e cargas monofásicas (iluminação, tomadas, 127 V), ligue parte delas na fase parada. Cliente bifásico (residencial, 2 entradas) não tem 3ª fase: pule para o passo 3 ou 4.</p>
+  <p class="note"><b>2. Passe carga para a 3ª fase (só se o cliente for trifásico).</b> Se o cliente tem a 3ª fase e cargas monofásicas (iluminação, tomadas, 127 V), ligue parte delas na fase parada. Cliente bifásico (residencial, 2 entradas) não tem 3ª fase: vá direto para o passo 3.</p>
   <p class="note"><b>3. Mande um gerador maior.</b> Com nominal maior, a mesma diferença entre fases vira uma % menor. O valor acima mostra o tamanho que segura esta carga.</p>
-  <p class="note"><b>4. Ajuste a proteção só dentro do limite do alternador.</b> Subir o % ou o atraso resolve o desarme, mas o desequilíbrio esquenta o rotor. Consulte a folha do alternador antes e anote a alteração no relatório.</p>
+  <p class="note"><b>4. Não mexa no gerador.</b> Nenhum ajuste de proteção nem religação no gerador. A solução é sempre trocar pelo tamanho que a conta pede.</p>
   <p class="note">Os nomes e o ajuste de fábrica variam por controlador. Confira o setpoint real no seu antes de confiar no cálculo.</p>
 </section>
 </div>
@@ -1096,7 +1096,7 @@ function calc(){
    if(!(In>0)||!(mx>0)){c="";t="—";m="Digite o gerador e as correntes.";}
    else if(trip&&mx>In){c="s-bad";t="🔴 Desarmou por sobrecorrente";m="A fase mais carregada ("+fA(mx)+") passou da nominal do gerador ("+fA(In)+"). Não foi o desequilíbrio.";}
    else if(trip&&des<=0){c="s-warn";t="🟡 Sem desequilíbrio";m="As 3 fases estavam iguais. O desarme veio de outra proteção; veja o histórico de alarmes.";}
-   else if(trip){c="s-bad";t="🔴 Proteção ajustada em até "+fmt(des)+"%";m="Desarmou com diferença de "+fA(mx-mn)+" entre fases. Para segurar esta carga, o ajuste precisa ir para "+(adj>100?"mais de 100%, então troque o gerador":adj+"%")+". Se o controlador já mostra um ajuste maior que "+fmt(des)+"%, quem desarmou foi outra proteção; veja o histórico de alarmes.";}
+   else if(trip){c="s-bad";t="🔴 Proteção ajustada em até "+fmt(des)+"%";m="Desarmou com diferença de "+fA(mx-mn)+" entre fases. Para segurar esta carga, troque pelo gerador indicado abaixo. Se o controlador já mostra um ajuste maior que "+fmt(des)+"%, quem desarmou foi outra proteção; veja o histórico de alarmes.";}
    else if(set>100){c="s-warn";t="🟡 Confira o ajuste";m="Ajuste de "+fmt(set)+"% não existe. O desequilíbrio costuma ficar entre 10 e 50%; veja o valor no controlador.";}
    else if(mx>In){c="s-bad";t="🔴 Sobrecorrente";m="A fase mais carregada passou da nominal do gerador.";}
    else if(des>=set){c="s-bad";t="🔴 Vai desarmar";m="Desequilíbrio de "+fmt(des)+"% passou do ajuste de "+fmt(set)+"%. O controlador desarma após o atraso.";}
@@ -1106,7 +1106,7 @@ function calc(){
    $("pBig").textContent=isFinite(des)&&mx>0?fmt(des)+"%":"—";
    $("pPct").textContent=mx>0?(trip?"de desequilíbrio no desarme":"de desequilíbrio · ajuste "+fmt(set)+"%"):"";
    $("pBar").style.width=isFinite(des)?Math.min(100,des/set*80)+"%":"0";
-   lastP=mx>0&&In>0?"⚡ DESEQUILÍBRIO GERADOR "+fmt(pk)+" kVA "+kv(pv)+"\nL1 "+fA(Ls[0])+" | L2 "+fA(Ls[1])+" | L3 "+fA(Ls[2])+"\nNominal "+fA(In)+" · desequilíbrio "+fmt(des)+"%"+(trip?" no desarme":" (ajuste "+fmt(set)+"%)")+"\n"+t+"\nMáx. bifásico: "+fA(biI)+" ("+fmt(pv*biI/1000)+" kVA)\nAjuste para segurar: "+(isFinite(adj)?adj+"%":"—")+"\nGerador para esta carga: "+fmt(Math.ceil(need))+" kVA ou maior":"";
+   lastP=mx>0&&In>0?"⚡ DESEQUILÍBRIO GERADOR "+fmt(pk)+" kVA "+kv(pv)+"\nL1 "+fA(Ls[0])+" | L2 "+fA(Ls[1])+" | L3 "+fA(Ls[2])+"\nNominal "+fA(In)+" · desequilíbrio "+fmt(des)+"%"+(trip?" no desarme":" (ajuste "+fmt(set)+"%)")+"\n"+t+"\nMáx. bifásico: "+fA(biI)+" ("+fmt(pv*biI/1000)+" kVA)\nGerador para esta carga: "+fmt(Math.ceil(need))+" kVA ou maior":"";
   }
 
   // eletrocentro sugerido
