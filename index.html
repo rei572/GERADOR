@@ -916,7 +916,7 @@ if($("gLimB").value.trim()==="60")$("gLimB").value="45";function save(){try{cons
 IDS.forEach(i=>$(i).addEventListener("input",calc));
 $("gPkT").querySelectorAll("button").forEach(b=>b.onclick=()=>{$("gPkF").value=b.dataset.v;calc();});
 
-const FROTA=[20,25,30,40,45,50,55,60,65,75,80,85,90,100,105,115,125,140,150,165,180,200,230,250,260,275,300,330,350,375,400,415,450,500,550,600,650,700,750,800,850,900,940];
+const FROTA=[10,20,25,30,40,45,50,55,60,65,75,80,85,90,100,105,115,125,140,150,165,180,200,230,250,260,275,300,330,350,375,400,415,450,500,550,600,650,700,750,800,850,900,940];
 // tensões efetivas e divisor por tipo
 function volts(){
   const tap=+$("vat").value, vb=+$("vbt").value;
