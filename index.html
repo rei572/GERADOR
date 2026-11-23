@@ -1027,9 +1027,9 @@ function calc(){
   const limB=Math.min(100,Math.max(10,num("gLimB")||45))/100;
   const outBM=(kF,sel,subId,box,nome)=>{
     if(!(Sload>0)){$(sel).textContent="–";$(subId).textContent="–";$(box).classList.remove("none");return "";}
-    const pr=Math.max(Sload*kF/limB,Sload*kF*pkF), pl=pr/frPS, g=FROTA.find(k=>k>=pl-1e-9);
-    if(g){$(sel).textContent=fmt(g)+" kVA";$(subId).textContent="Da frota, pela placa. Mínimo ≈ "+fmt(Math.ceil(pl-1e-9))+" kVA na placa ("+fmt(Math.ceil(pr-1e-9))+" prime). Limite da proteção de desequilíbrio.";$(box).classList.remove("none");return nome+": "+fmt(g)+" kVA";}
-    $(sel).textContent="Acima de 940 kVA";$(subId).textContent="Precisa de ≈ "+fmt(Math.ceil(pl-1e-9))+" kVA na placa: nenhum gerador da frota atende sozinho.";$(box).classList.add("none");return nome+": acima de 940 kVA";};
+    const pr=Math.max(Sload*kF/limB,Sload*kF*pkF), pl=Math.ceil(pr/frPS-1e-9);
+    if(pl<=940){$(sel).textContent=fmt(pl)+" kVA";$(subId).textContent="Mínimo na placa ("+fmt(Math.ceil(pr-1e-9))+" kVA prime). Mande este ou maior. Limite da proteção de desequilíbrio.";$(box).classList.remove("none");return nome+": "+fmt(pl)+" kVA";}
+    $(sel).textContent="Acima de 940 kVA";$(subId).textContent="Precisa de "+fmt(pl)+" kVA na placa: nenhum gerador da frota atende sozinho.";$(box).classList.add("none");return nome+": acima de 940 kVA";};
   let tBi="",tMo="";
   $("genT220").hidden=!med;$("genT380").hidden=!med;$("gen").hidden=med;$("genMo").hidden=med;
   $("gVgLbl").textContent=med?"Tensão do gerador (detalhes abaixo)":"Tensão do gerador";
@@ -1039,9 +1039,9 @@ function calc(){
     const I=num("gI"), limT=lim/100;
     const pick=(pr,sel,subId,box,nome,extra)=>{
       if(!(I>0)){$(sel).textContent="–";$(subId).textContent="Digite a maior fase.";$(box).classList.remove("none");return "";}
-      const pl=pr/frPS, g=FROTA.find(k=>k>=pl-1e-9);
-      if(g){$(sel).textContent=fmt(g)+" kVA";$(subId).textContent="Da frota, pela placa. Mínimo ≈ "+fmt(Math.ceil(pl-1e-9))+" kVA na placa ("+fmt(Math.ceil(pr-1e-9))+" prime)."+extra;$(box).classList.remove("none");return nome+": "+fmt(g)+" kVA";}
-      $(sel).textContent="Acima de 940 kVA";$(subId).textContent="Precisa de ≈ "+fmt(Math.ceil(pl-1e-9))+" kVA na placa: nenhum gerador da frota atende sozinho.";$(box).classList.add("none");return nome+": acima de 940 kVA";};
+      const pl=Math.ceil(pr/frPS-1e-9);
+      if(pl<=940){$(sel).textContent=fmt(pl)+" kVA";$(subId).textContent="Mínimo na placa ("+fmt(Math.ceil(pr-1e-9))+" kVA prime). Mande este ou maior."+extra;$(box).classList.remove("none");return nome+": "+fmt(pl)+" kVA";}
+      $(sel).textContent="Acima de 940 kVA";$(subId).textContent="Precisa de "+fmt(pl)+" kVA na placa: nenhum gerador da frota atende sozinho.";$(box).classList.add("none");return nome+": acima de 940 kVA";};
     const tri=V=>{const s=r3*V*I/1000;return Math.max(s/limT,s*pkF);};
     const sB=r3*220*I/1000;
     const t1=pick(tri(220),"gT220Sel","gT220Sub","genT220","Trifásico 220 V",""),
@@ -1053,8 +1053,8 @@ function calc(){
   }
   if(!(Ig>0)){$("gSel").textContent="–";$("gSub").textContent=med?"Digite a corrente medida.":"Digite os kVA do trafo.";["gIn","gSkva","gSsb","gOc"].forEach(i=>$(i).textContent="—");}
   else{const Ign=gk*1000/(r3*Vg);
-    const gF=FROTA.find(k=>k>=gk/frPS-1e-9);$("gSel").textContent=gF?fmt(gF)+" kVA":"Acima de 940 kVA";
-    $("gSub").textContent="Da frota, pela placa. Mínimo ≈ "+fmt(sbOf(gk))+" kVA na placa ("+fmt(gk)+" prime). "+(bi?"Bifásico: corrente até "+fmt(lim)+"% da nominal do gerador, por causa da proteção de desequilíbrio. Mande este ou o próximo maior da frota.":(porPk?"O pico de partida (× "+fmt(pkF,2)+") manda: o regime pediria só "+fmt(Math.ceil(Sreq-1e-9))+" kVA. Mande este ou o próximo maior da frota.":"Mande este ou o próximo maior da frota · carga a "+fmt(lim)+"% dele."));
+    $("gSel").textContent=fmt(sbOf(gk))+" kVA";
+    $("gSub").textContent="Mínimo na placa ("+fmt(gk)+" kVA prime). "+(bi?"Bifásico: corrente até "+fmt(lim)+"% da nominal do gerador, por causa da proteção de desequilíbrio. Mande este ou o próximo maior da frota.":(porPk?"O pico de partida (× "+fmt(pkF,2)+") manda: o regime pediria só "+fmt(Math.ceil(Sreq-1e-9))+" kVA. Mande este ou o próximo maior da frota.":"Mande este ou o próximo maior da frota · carga a "+fmt(lim)+"% dele."));
     $("gSkva").textContent=fmt(gk)+" kVA";
     $("gSsb").textContent="≈ "+fmt(sbOf(gk))+" kVA";
     $("gIn").textContent=fA(Ign)+" por fase";
