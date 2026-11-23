@@ -470,7 +470,7 @@ details input{font-size:1.15rem;min-height:50px}
   </div>
   <p class="note"><b>Mandar o dobro</b> cobre só o aquecimento (1,73×). Mas a 3ª fase em 0 A faz o desequilíbrio = corrente da fase ÷ nominal. Com o ajuste típico de 50%, o gerador desarma com metade da nominal, bem antes de esquentar. É essa proteção que manda, e o cálculo acima já usa ela.</p>
   <p class="note"><b>Exemplos em 220 V:</b> 30 kVA bifásico = 136 A → 52 kVA pela corrente, ≈ 115 kVA com a proteção. 100 kVA bifásico = 455 A → 173 kVA pela corrente, ≈ 385 kVA com a proteção.</p>
-  <p class="note"><b>Para usar um gerador menor:</b> passe cargas 127 V para a 3ª fase (equilibra) ou suba o ajuste de desequilíbrio, só dentro do limite do alternador (veja "Proteção de desequilíbrio"). Confira também a tensão: gerador em 380/220 V dá 380 V entre fases. Se o cliente pedir 100 kVA, veja se é a carga real ou só o tamanho do trafo. Medir no alicate evita mandar gerador grande demais.</p>
+  <p class="note"><b>Cliente bifásico (residencial, 2 entradas):</b> não existe 3ª fase para equilibrar. A carga fica só em duas fases do gerador, sempre. As saídas são: mandar o gerador pela regra da proteção (≈ 3,85×) ou subir o ajuste de desequilíbrio, só dentro do limite do alternador (veja "Proteção de desequilíbrio"). Aí o gerador pode ficar perto de 1,73× a carga. Confira também a tensão: gerador em 380/220 V dá 380 V entre fases. Se o cliente pedir 100 kVA, veja se é a carga real ou só o tamanho do trafo. Medir no alicate evita mandar gerador grande demais.</p>
 </section>
 
 <h2 class="sec">Gerador disponível</h2>
@@ -566,7 +566,7 @@ details input{font-size:1.15rem;min-height:50px}
 <h2 class="sec">Como resolver em campo</h2>
 <section class="panel">
   <p class="note"><b>1. Confirme a causa.</b> No histórico de alarmes do controlador, veja se atuou o desequilíbrio de corrente (no InteliGen4, Current Unbalance; no DSE, Current Imbalance). Se foi subtensão ou sobrecorrente, a solução é outra.</p>
-  <p class="note"><b>2. Passe carga para a 3ª fase.</b> Se o cliente tem cargas monofásicas (iluminação, tomadas, 127 V), ligue parte delas na fase parada. Cada ampère que vai para a 3ª fase reduz o desequilíbrio.</p>
+  <p class="note"><b>2. Passe carga para a 3ª fase (só se o cliente for trifásico).</b> Se o cliente tem a 3ª fase e cargas monofásicas (iluminação, tomadas, 127 V), ligue parte delas na fase parada. Cliente bifásico (residencial, 2 entradas) não tem 3ª fase: pule para o passo 3 ou 4.</p>
   <p class="note"><b>3. Mande um gerador maior.</b> Com nominal maior, a mesma diferença entre fases vira uma % menor. O valor acima mostra o tamanho que segura esta carga.</p>
   <p class="note"><b>4. Ajuste a proteção só dentro do limite do alternador.</b> Subir o % ou o atraso resolve o desarme, mas o desequilíbrio esquenta o rotor. Consulte a folha do alternador antes e anote a alteração no relatório.</p>
   <p class="note">Os nomes e o ajuste de fábrica variam por controlador. Confira o setpoint real no seu antes de confiar no cálculo.</p>
