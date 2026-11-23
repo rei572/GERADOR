@@ -396,10 +396,6 @@ details input{font-size:1.15rem;min-height:50px}
     </div>
   </div>
   <div class="stack" id="gMedWrap" hidden>
-  <div class="seg" id="gLig">
-    <button type="button" data-v="tri" aria-pressed="true">Carga trifásica<small>3 fases</small></button>
-    <button type="button" data-v="bi" aria-pressed="false">Carga bifásica<small>2 fases</small></button>
-  </div>
   <div class="row" id="gMedBox">
     <label>Maior fase (A)<input id="gI" inputmode="decimal" value="150"></label>
     <label>Onde mediu<select id="gV">
@@ -428,9 +424,19 @@ details input{font-size:1.15rem;min-height:50px}
   </div>
   <p class="note">O gerador prime tem que ser pelo menos a carga × fator. É o pior caso, sem precisar da placa dos motores.</p>
   <div class="gen" id="gen">
-    <span>Gerador sugerido · mínimo · prime</span>
+    <span>Se o cliente for trifásico · mande</span>
     <strong id="gSel">–</strong>
     <small id="gSub">–</small>
+  </div>
+  <div class="gen" id="genBi">
+    <span>Se o cliente for bifásico · mande</span>
+    <strong id="gBiSel">–</strong>
+    <small id="gBiSub">–</small>
+  </div>
+  <div class="gen" id="genMo">
+    <span>Se o cliente for monofásico · mande</span>
+    <strong id="gMoSel">–</strong>
+    <small id="gMoSub">–</small>
   </div>
   <dl>
     <dt id="gSrc">Carga a atender</dt><dd id="gLoad">—</dd>
@@ -447,31 +453,10 @@ details input{font-size:1.15rem;min-height:50px}
     <hr>
     <dt id="gCabLL">Cabos 120 mm² pela carga</dt><dd id="gCabL">—</dd>
     <dt id="gTrL" hidden>Trafo equivalente</dt><dd id="gTr" hidden>—</dd>
-    <dt>Gerador ÷ carga</dt><dd id="gMult">—</dd>
   </dl>
 </section>
 
-<h2 class="sec">Regra rápida · gerador tri em carga bifásica</h2>
-<section class="panel">
-  <p class="note">O limite do gerador é a <b>corrente por fase</b>, não o kVA da placa. Na carga bifásica uma fase fica parada e as outras duas continuam limitadas à mesma corrente nominal. Por isso ele entrega menos kVA.</p>
-  <div class="lcd">
-    <table>
-      <thead><tr><th>Ligação da carga</th><th>Usa do gerador</th><th>Gerador ≥</th></tr></thead>
-      <tbody>
-        <tr><td colspan="3"><b>Só pela corrente (referência: não use para escolher)</b></td></tr>
-        <tr><td>220 V entre fases (F‑F)</td><td>58%</td><td>1,73× a carga</td></tr>
-        <tr><td>127 V dividida em 2 fases (F‑N, precisa de neutro)</td><td>67%</td><td>1,5× a carga</td></tr>
-        <tr><td>Tudo numa fase só (mono F‑N)</td><td>33%</td><td>3× a carga</td></tr>
-        <tr><td colspan="3"><b>Com proteção de desequilíbrio a 50% (limite 45% da corrente)</b></td></tr>
-        <tr><td>Bifásico (F‑F ou F‑N em 2 fases)</td><td>26%</td><td>3,85× a carga</td></tr>
-        <tr><td>Mono F‑N (uma fase)</td><td>15%</td><td>6,7× a carga</td></tr>
-      </tbody>
-    </table>
-  </div>
-  <p class="note"><b>Mandar o dobro não basta:</b> cobre só o aquecimento (1,73×). Mas a 3ª fase em 0 A faz o desequilíbrio = corrente da fase ÷ nominal. Com o ajuste típico de 50%, o gerador desarma com metade da nominal, bem antes de esquentar. É essa proteção que manda, e o cálculo acima já usa ela.</p>
-  <p class="note"><b>Exemplos em 220 V:</b> 30 kVA bifásico = 136 A → 52 kVA pela corrente, ≈ 115 kVA com a proteção. 100 kVA bifásico = 455 A → 173 kVA pela corrente, ≈ 385 kVA com a proteção.</p>
-  <p class="note"><b>Cliente bifásico (residencial, 2 entradas):</b> não existe 3ª fase para equilibrar. A carga fica só em duas fases do gerador, sempre. Como não se altera nada no gerador (nem proteção, nem ligação), a única saída é a conta: mandar o gerador pela regra da proteção, ≈ 3,85× a carga bifásica. Confira também a tensão: gerador em 380/220 V dá 380 V entre fases. Se o cliente pedir 100 kVA, veja se é a carga real ou só o tamanho do trafo. Medir no alicate evita mandar gerador grande demais.</p>
-</section>
+
 
 <h2 class="sec">Gerador disponível</h2>
 <section class="panel">
@@ -891,7 +876,7 @@ const $=id=>document.getElementById(id);
 const r3=Math.sqrt(3);
 const KEY="corrente-trafo-v1";
 const IDS=["pKva","pV","pSet","pL1","pL2","pL3","kva","z","vat","vbt","finr","imed","fp","cabo","marg","ocup","gI","gV","gVg","gLim","gLimB","gKva","gOcup","gDisp","gFr","gCM","gPkF","ePkF","eFr","ent"];
-const st={tipo:"tri",lado:"at",gmodo:"trafo",gTipo:"tri",gLig:"tri",pModo:"trip",tab:"trafo",gNeu:"com"};
+const st={tipo:"tri",lado:"at",gmodo:"trafo",gTipo:"tri",pModo:"trip",tab:"trafo",gNeu:"com"};
 function setTab(t){st.tab=t;$("tabs").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.p===t));$("pTrafo").hidden=t!=="trafo";$("pGer").hidden=t!=="gerador";$("pMot").hidden=t!=="motor";$("pPico").hidden=t!=="pico";}
 $("tabs").querySelectorAll("button").forEach(b=>b.onclick=()=>{setTab(b.dataset.p);save();window.scrollTo(0,0);});
 const TRI=[75,112.5,150,225,300,500,750,1000,1500,2000,2500,3000];
@@ -903,7 +888,7 @@ const nv0=v=>{const x=parseFloat(String(v||"").replace(",","."));return isFinite
 const kv=v=>v>=1000?fmt(v/1000,2).replace(/,?0+$/,"")+" kV":fmt(v)+" V";
 
 function setSeg(id,val){st[id]=val;$(id).querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===val));}
-["tipo","lado","gmodo","gTipo","gLig","pModo","gNeu"].forEach(k=>$(k).querySelectorAll("button").forEach(b=>b.onclick=()=>{
+["tipo","lado","gmodo","gTipo","pModo","gNeu"].forEach(k=>$(k).querySelectorAll("button").forEach(b=>b.onclick=()=>{
   const was=st.tipo;setSeg(k,b.dataset.v);
   if(k==="tipo"&&was!==st.tipo){
     const mono=st.tipo!=="tri", wasMono=was!=="tri";
@@ -912,15 +897,16 @@ function setSeg(id,val){st[id]=val;$(id).querySelectorAll("button").forEach(b=>b
   }
   calc();}));
 
-try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s){IDS.forEach(i=>{if(s[i]!=null)$(i).value=s[i];});if(s.tipo)setSeg("tipo",s.tipo);if(s.lado)setSeg("lado",s.lado);if(s.gmodo)setSeg("gmodo",s.gmodo);if(s.gTipo)setSeg("gTipo",s.gTipo);if(s.gLig)setSeg("gLig",s.gLig);if(s.pModo)setSeg("pModo",s.pModo);if(s.gNeu)setSeg("gNeu",s.gNeu);if(s.tab)setTab(s.tab);}}catch(e){}
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s){IDS.forEach(i=>{if(s[i]!=null)$(i).value=s[i];});if(s.tipo)setSeg("tipo",s.tipo);if(s.lado)setSeg("lado",s.lado);if(s.gmodo)setSeg("gmodo",s.gmodo);if(s.gTipo)setSeg("gTipo",s.gTipo);if(s.pModo)setSeg("pModo",s.pModo);if(s.gNeu)setSeg("gNeu",s.gNeu);if(s.tab)setTab(s.tab);}}catch(e){}
 if(location.hash==="#gerador")setTab("gerador");
 if(location.hash==="#motor")setTab("motor");
 if(location.hash==="#pico")setTab("pico");
 document.querySelectorAll("select").forEach(s=>{if(s.selectedIndex<0)s.selectedIndex=0;});
-if($("gLimB").value.trim()==="60")$("gLimB").value="45";function save(){try{const o={tipo:st.tipo,lado:st.lado,gmodo:st.gmodo,gTipo:st.gTipo,gLig:st.gLig,pModo:st.pModo,tab:st.tab,gNeu:st.gNeu};IDS.forEach(i=>o[i]=$(i).value);localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}}
+if($("gLimB").value.trim()==="60")$("gLimB").value="45";function save(){try{const o={tipo:st.tipo,lado:st.lado,gmodo:st.gmodo,gTipo:st.gTipo,pModo:st.pModo,tab:st.tab,gNeu:st.gNeu};IDS.forEach(i=>o[i]=$(i).value);localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}}
 IDS.forEach(i=>$(i).addEventListener("input",calc));
 $("gPkT").querySelectorAll("button").forEach(b=>b.onclick=()=>{$("gPkF").value=b.dataset.v;calc();});
 
+const FROTA=[20,25,30,40,45,50,55,60,65,75,80,85,90,100,105,115,125,140,150,165,180,200,230,250,260,275,300,330,350,375,400,415,450,500,550,600,650,700,750,800,850,900,940];
 // tensões efetivas e divisor por tipo
 function volts(){
   const tap=+$("vat").value, vb=+$("vbt").value;
@@ -1001,14 +987,14 @@ function calc(){
 
   // qual gerador mandar
   const Vg=+$("gVg").value, med=st.gmodo==="med";
-  const bi=med?st.gLig==="bi":st.gTipo!=="tri";
+  const bi=med?false:st.gTipo!=="tri";
   const lim=bi?Math.min(100,Math.max(10,num("gLimB")||45)):Math.min(100,Math.max(10,num("gLim")||80));
   $("gMedWrap").hidden=!med;$("gTrBox").hidden=med;$("gTrL").hidden=!med;$("gTr").hidden=!med;
-  $("gLimBBox").hidden=!bi;
+  $("gLimBBox").hidden=true;
   let Sload, Ig;
   if(med){const I=num("gI"), Vm=+$("gV").value;
     if(bi){Sload=Vm*I/1000;Ig=Vg>0?Sload*1000/Vg:NaN;}else{Sload=r3*Vm*I/1000;Ig=Vg>0?Sload*1000/(r3*Vg):NaN;}
-    $("gSrc").textContent="Carga "+(bi?"bifásica":"trifásica")+" medida ("+fA(I)+" em "+kv(Vm)+")";}
+    $("gSrc").textContent="Carga trifásica medida ("+fA(I)+" em "+kv(Vm)+")";}
   else{const gkva=num("gKva"), goc=$("gOcup").value.trim()===""?100:Math.max(0,num("gOcup"));
     Sload=gkva*goc/100;Ig=bi?Sload*1000/Vg:Sload*1000/(r3*Vg);
     $("gSrc").textContent="Trafo "+fmt(gkva,gkva%1?1:0)+" kVA "+(st.gTipo==="tri"?"tri":st.gTipo==="ff"?"mono 2 buchas":"mono 1 bucha")+" a "+fmt(goc)+"%";}
@@ -1027,11 +1013,18 @@ function calc(){
   $("gPk").textContent=Ig>0?"≈ "+fmt(gStart)+" kVA · "+fA(Ipk):"—";
   $("gByReg").textContent=Ig>0?fmt(Math.ceil(Sreq-1e-9))+" kVA":"—";
   $("gByPk").textContent=Ig>0?fmt(Math.ceil(gStart-1e-9))+" kVA":"—";
-  $("gMult").textContent=Ig>0&&Sload>0?fmt(Math.ceil(Math.max(Sreq,gStart)-1e-9)/Sload,2)+"× a carga"+(bi?" (bifásico, com a proteção)":""):"—";
+  // mesma carga em cliente bifásico (F-F) e monofásico (F-N): a proteção de desequilíbrio limita a corrente
+  const limB=Math.min(100,Math.max(10,num("gLimB")||45))/100;
+  const outBM=(kF,sel,subId,box,nome)=>{
+    if(!(Sload>0)){$(sel).textContent="–";$(subId).textContent="–";$(box).classList.remove("none");return "";}
+    const pr=Math.max(Sload*kF/limB,Sload*kF*pkF), pl=pr/frPS, g=FROTA.find(k=>k>=pl-1e-9);
+    if(g){$(sel).textContent=fmt(g)+" kVA";$(subId).textContent="Da frota, pela placa. Mínimo ≈ "+fmt(Math.ceil(pl-1e-9))+" kVA na placa ("+fmt(Math.ceil(pr-1e-9))+" prime). Limite da proteção de desequilíbrio.";$(box).classList.remove("none");return nome+": "+fmt(g)+" kVA";}
+    $(sel).textContent="Acima de 940 kVA";$(subId).textContent="Precisa de ≈ "+fmt(Math.ceil(pl-1e-9))+" kVA na placa: nenhum gerador da frota atende sozinho.";$(box).classList.add("none");return nome+": acima de 940 kVA";};
+  const tBi=outBM(Math.sqrt(3),"gBiSel","gBiSub","genBi","Bifásico"), tMo=outBM(3,"gMoSel","gMoSub","genMo","Monofásico");
   if(!(Ig>0)){$("gSel").textContent="–";$("gSub").textContent=med?"Digite a corrente medida.":"Digite os kVA do trafo.";["gIn","gSkva","gSsb","gOc"].forEach(i=>$(i).textContent="—");}
   else{const Ign=gk*1000/(r3*Vg);
-    $("gSel").textContent=fmt(gk)+" kVA";
-    $("gSub").textContent="Prime. Na placa ≈ "+fmt(sbOf(gk))+" kVA. "+(bi?"Bifásico: corrente até "+fmt(lim)+"% da nominal do gerador, por causa da proteção de desequilíbrio. Mande este ou o próximo maior da frota.":(porPk?"O pico de partida (× "+fmt(pkF,2)+") manda: o regime pediria só "+fmt(Math.ceil(Sreq-1e-9))+" kVA. Mande este ou o próximo maior da frota.":"Mande este ou o próximo maior da frota · carga a "+fmt(lim)+"% dele."));
+    const gF=FROTA.find(k=>k>=gk/frPS-1e-9);$("gSel").textContent=gF?fmt(gF)+" kVA":"Acima de 940 kVA";
+    $("gSub").textContent="Da frota, pela placa. Mínimo ≈ "+fmt(sbOf(gk))+" kVA na placa ("+fmt(gk)+" prime). "+(bi?"Bifásico: corrente até "+fmt(lim)+"% da nominal do gerador, por causa da proteção de desequilíbrio. Mande este ou o próximo maior da frota.":(porPk?"O pico de partida (× "+fmt(pkF,2)+") manda: o regime pediria só "+fmt(Math.ceil(Sreq-1e-9))+" kVA. Mande este ou o próximo maior da frota.":"Mande este ou o próximo maior da frota · carga a "+fmt(lim)+"% dele."));
     $("gSkva").textContent=fmt(gk)+" kVA";
     $("gSsb").textContent="≈ "+fmt(sbOf(gk))+" kVA";
     $("gIn").textContent=fA(Ign)+" por fase";
@@ -1047,7 +1040,7 @@ function calc(){
   const cabTot=n=>{const f=n*nFz, nn=neu?Math.ceil(n/2):0;return n+" por fase · "+(f+nn)+" no total ("+f+" fase"+(neu?" + "+nn+" neutro":"")+")";};
   $("gCabL").textContent=Ig>0?cabTot(nGc):"—";
   lastG=Ig>0?"⚡ GERADOR SUGERIDO: "+fmt(gk)+" kVA prime (placa ≈ "+fmt(sbOf(gk))+" kVA) ou maior\n"+$("gSrc").textContent+" = "+$("gLoad").textContent+"\n"+
-    "Corrente no gerador: "+fA(Ig)+" em "+kv(Vg)+"\nPico estimado (× "+fmt(pkF,2)+"): ≈ "+fmt(gStart)+" kVA · "+fA(Ipk)+"\nCabos 120 mm²: "+cabTot(nGc):"";
+    "Corrente no gerador: "+fA(Ig)+" em "+kv(Vg)+"\nPico estimado (× "+fmt(pkF,2)+"): ≈ "+fmt(gStart)+" kVA · "+fA(Ipk)+"\nCabos 120 mm²: "+cabTot(nGc)+"\n"+tBi+"\n"+tMo:"";
   // gerador disponível
   {const Gin=Math.max(0,num("gDisp")), Gd=Gin*frPS, Ind=Gd>0?Gd*1000/(r3*Vg):NaN;
    const oc=Ind>0?Ig/Ind*100:NaN;
