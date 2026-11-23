@@ -398,13 +398,13 @@ details input{font-size:1.15rem;min-height:50px}
   <div class="stack" id="gMedWrap" hidden>
   <div class="row" id="gMedBox">
     <label>Maior fase (A)<input id="gI" inputmode="decimal" value="150"></label>
-    <label>Onde mediu<select id="gV">
+    <label hidden>Onde mediu<select id="gV">
       <option value="220">220 V</option><option value="380" selected>380 V</option><option value="440">440 V</option>
       <option value="13800">13,8 kV</option><option value="7967">7,97 kV</option></select></label>
   </div>
   </div>
   <div class="row">
-    <label>Tensão do gerador<select id="gVg">
+    <label><span id="gVgLbl">Tensão do gerador</span><select id="gVg">
       <option value="380" selected>380 V</option><option value="220">220 V</option><option value="440">440 V</option><option value="480">480 V</option></select></label>
     <label><span id="gLimLbl">Carga máx. tri (%)</span><input id="gLim" inputmode="decimal" value="80"></label>
   </div>
@@ -423,6 +423,16 @@ details input{font-size:1.15rem;min-height:50px}
     <div class="lbl" style="align-content:end"><span class="tipoTag" id="gPkTag">–</span></div>
   </div>
   <p class="note">O gerador prime tem que ser pelo menos a carga × fator. É o pior caso, sem precisar da placa dos motores.</p>
+  <div class="gen" id="genT220" hidden>
+    <span>Cliente trifásico 220 V · mande</span>
+    <strong id="gT220Sel">–</strong>
+    <small id="gT220Sub">–</small>
+  </div>
+  <div class="gen" id="genT380" hidden>
+    <span>Cliente trifásico 380 V · mande</span>
+    <strong id="gT380Sel">–</strong>
+    <small id="gT380Sub">–</small>
+  </div>
   <div class="gen" id="gen">
     <span>Se o cliente for trifásico · mande</span>
     <strong id="gSel">–</strong>
@@ -992,9 +1002,9 @@ function calc(){
   $("gMedWrap").hidden=!med;$("gTrBox").hidden=med;$("gTrL").hidden=!med;$("gTr").hidden=!med;
   $("gLimBBox").hidden=true;
   let Sload, Ig;
-  if(med){const I=num("gI"), Vm=+$("gV").value;
+  if(med){const I=num("gI"), Vm=Vg;
     if(bi){Sload=Vm*I/1000;Ig=Vg>0?Sload*1000/Vg:NaN;}else{Sload=r3*Vm*I/1000;Ig=Vg>0?Sload*1000/(r3*Vg):NaN;}
-    $("gSrc").textContent="Carga trifásica medida ("+fA(I)+" em "+kv(Vm)+")";}
+    $("gSrc").textContent="Maior fase "+fA(I)+" (gerador em "+kv(Vm)+")";}
   else{const gkva=num("gKva"), goc=$("gOcup").value.trim()===""?100:Math.max(0,num("gOcup"));
     Sload=gkva*goc/100;Ig=bi?Sload*1000/Vg:Sload*1000/(r3*Vg);
     $("gSrc").textContent="Trafo "+fmt(gkva,gkva%1?1:0)+" kVA "+(st.gTipo==="tri"?"tri":st.gTipo==="ff"?"mono 2 buchas":"mono 1 bucha")+" a "+fmt(goc)+"%";}
@@ -1020,7 +1030,27 @@ function calc(){
     const pr=Math.max(Sload*kF/limB,Sload*kF*pkF), pl=pr/frPS, g=FROTA.find(k=>k>=pl-1e-9);
     if(g){$(sel).textContent=fmt(g)+" kVA";$(subId).textContent="Da frota, pela placa. Mínimo ≈ "+fmt(Math.ceil(pl-1e-9))+" kVA na placa ("+fmt(Math.ceil(pr-1e-9))+" prime). Limite da proteção de desequilíbrio.";$(box).classList.remove("none");return nome+": "+fmt(g)+" kVA";}
     $(sel).textContent="Acima de 940 kVA";$(subId).textContent="Precisa de ≈ "+fmt(Math.ceil(pl-1e-9))+" kVA na placa: nenhum gerador da frota atende sozinho.";$(box).classList.add("none");return nome+": acima de 940 kVA";};
-  const tBi=outBM(Math.sqrt(3),"gBiSel","gBiSub","genBi","Bifásico"), tMo=outBM(3,"gMoSel","gMoSub","genMo","Monofásico");
+  let tBi="",tMo="";
+  $("genT220").hidden=!med;$("genT380").hidden=!med;$("gen").hidden=med;$("genMo").hidden=med;
+  $("gVgLbl").textContent=med?"Tensão do gerador (detalhes abaixo)":"Tensão do gerador";
+  $("genBi").querySelector("span").textContent=med?"Cliente bifásico ou monofásico (220/127 V) · mande":"Se o cliente for bifásico · mande";
+  if(med){
+    // pela corrente: o gerador depende só da corrente e da tensão dele
+    const I=num("gI"), limT=lim/100;
+    const pick=(pr,sel,subId,box,nome,extra)=>{
+      if(!(I>0)){$(sel).textContent="–";$(subId).textContent="Digite a maior fase.";$(box).classList.remove("none");return "";}
+      const pl=pr/frPS, g=FROTA.find(k=>k>=pl-1e-9);
+      if(g){$(sel).textContent=fmt(g)+" kVA";$(subId).textContent="Da frota, pela placa. Mínimo ≈ "+fmt(Math.ceil(pl-1e-9))+" kVA na placa ("+fmt(Math.ceil(pr-1e-9))+" prime)."+extra;$(box).classList.remove("none");return nome+": "+fmt(g)+" kVA";}
+      $(sel).textContent="Acima de 940 kVA";$(subId).textContent="Precisa de ≈ "+fmt(Math.ceil(pl-1e-9))+" kVA na placa: nenhum gerador da frota atende sozinho.";$(box).classList.add("none");return nome+": acima de 940 kVA";};
+    const tri=V=>{const s=r3*V*I/1000;return Math.max(s/limT,s*pkF);};
+    const sB=r3*220*I/1000;
+    const t1=pick(tri(220),"gT220Sel","gT220Sub","genT220","Trifásico 220 V",""),
+          t2=pick(tri(380),"gT380Sel","gT380Sub","genT380","Trifásico 380 V","");
+    tBi=pick(Math.max(sB/limB,sB*pkF),"gBiSel","gBiSub","genBi","Bifásico ou monofásico"," Limite da proteção de desequilíbrio.");
+    tMo=t1+"\n"+t2;
+  } else {
+    tBi=outBM(Math.sqrt(3),"gBiSel","gBiSub","genBi","Bifásico"); tMo=outBM(3,"gMoSel","gMoSub","genMo","Monofásico");
+  }
   if(!(Ig>0)){$("gSel").textContent="–";$("gSub").textContent=med?"Digite a corrente medida.":"Digite os kVA do trafo.";["gIn","gSkva","gSsb","gOc"].forEach(i=>$(i).textContent="—");}
   else{const Ign=gk*1000/(r3*Vg);
     const gF=FROTA.find(k=>k>=gk/frPS-1e-9);$("gSel").textContent=gF?fmt(gF)+" kVA":"Acima de 940 kVA";
